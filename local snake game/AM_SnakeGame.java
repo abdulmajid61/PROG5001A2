@@ -17,7 +17,7 @@ public class AM_SnakeGame extends JFrame {
         EventQueue.invokeLater(() -> {
             //create the game with a game title as follow: The Snake Game (C) Your_Name
             JFrame sgame = new AM_SnakeGame("The Snake Game (C) Abdul_majid");
-            sgame.setVisible(true);
+            sgame.setVisible(false);
         });
     }
 }

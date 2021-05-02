@@ -13,7 +13,22 @@ public class AM_GameBoard extends JPanel {
         setBackground(Color.black);
         setFocusable(true);        
     }
-
+    
+    public void drawGameBoard(){
+        //this method will draw gameboard as canvas and initialize
+        //it with proper values
+    }
+    
+    public int getValue(int x,int y){
+        //it will get the value at particular cell x and y cordinate
+        return 0;
+    }
+    
+    public int setValue(int x,int y,int value){
+        //it will set the value at particular cell x and y cordinate
+        return 0;
+    }
+    
     @Override
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
