@@ -1,3 +1,4 @@
+package snakegame;
 /**
  * Class Prey represents any prey object.
  *

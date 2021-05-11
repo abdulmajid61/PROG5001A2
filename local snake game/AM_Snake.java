@@ -1,3 +1,4 @@
+package snakegame;
 /**
  * Write a description of class Snake here.
  *

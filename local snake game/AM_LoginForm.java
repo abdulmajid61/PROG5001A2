@@ -1,4 +1,6 @@
+package snakegame;
 import java.awt.GridBagLayout;
+import java.awt.Color;
 import java.awt.GridBagConstraints;
 import java.awt.Insets;
 import javax.swing.JButton;
@@ -13,6 +15,7 @@ import java.awt.event.*;
 import java.util.Scanner;
 import java.io.File;
 import java.io.FileNotFoundException;
+import snakegame.*;
  
 /**
  * This program demonstrates how to use JFrame and LayoutManager.
@@ -26,6 +29,8 @@ public class AM_LoginForm extends JFrame implements ActionListener {
     private JPasswordField fieldPassword;
     private JButton buttonLogin;
     private AM_PlayerList playerList;
+    
+    private JPanel panelLogin;
  
     public AM_LoginForm() {
         super("Login Form");
@@ -36,7 +41,7 @@ public class AM_LoginForm extends JFrame implements ActionListener {
         buttonLogin = new JButton("Login");
         
         // create a new panel with GridBagLayout manager
-        JPanel panelLogin = new JPanel(new GridBagLayout());
+        panelLogin = new JPanel(new GridBagLayout());
         
         //use contrains to control the gridbaglayout
         GridBagConstraints constraints = new GridBagConstraints();
@@ -77,6 +82,7 @@ public class AM_LoginForm extends JFrame implements ActionListener {
         
         //instantiate the playerList
         playerList = new AM_PlayerList();
+        
         try {
             readPlayerFromFile("players.txt");
         } catch (FileNotFoundException e) {
@@ -85,10 +91,25 @@ public class AM_LoginForm extends JFrame implements ActionListener {
     }
     
     public void actionPerformed(ActionEvent e) {
-        String username = textUsername.getText();
-        String password = fieldPassword.getText();
+//        String username = textUsername.getText();
+//        String password = fieldPassword.getText();
+    	
+    	String username = "abdul";
+        String password = "123";
+        
         if (playerList.matchPlayer(username, password)) {
-            JOptionPane.showMessageDialog(this, username + ": login successfully");
+        	
+        	remove(panelLogin);
+        	
+        	add(new AM_GameBoard());
+            setResizable(false);
+            
+            pack();
+            
+            setTitle("My Snake Game (C)");
+            setLocationRelativeTo(null);
+            setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        	
         } else {
             JOptionPane.showMessageDialog(this, "wrong username or password");
         }
@@ -116,7 +137,7 @@ public class AM_LoginForm extends JFrame implements ActionListener {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                new AM_LoginForm().setVisible(true);
+//                new AM_LoginForm().setVisible(true);
             }
         });
     }

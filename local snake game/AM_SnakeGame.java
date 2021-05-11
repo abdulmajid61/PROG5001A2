@@ -1,3 +1,4 @@
+package snakegame;
 import java.awt.EventQueue;
 import javax.swing.JFrame;
 
@@ -18,6 +19,8 @@ public class AM_SnakeGame extends JFrame {
             //create the game with a game title as follow: The Snake Game (C) Your_Name
             JFrame sgame = new AM_SnakeGame("The Snake Game (C) Abdul_majid");
             sgame.setVisible(false);
+            
+            new AM_LoginForm().setVisible(true);
         });
     }
 }
