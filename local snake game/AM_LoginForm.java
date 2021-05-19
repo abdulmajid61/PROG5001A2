@@ -1,4 +1,3 @@
-package snakegame;
 import java.awt.GridBagLayout;
 import java.awt.Color;
 import java.awt.GridBagConstraints;
@@ -15,7 +14,6 @@ import java.awt.event.*;
 import java.util.Scanner;
 import java.io.File;
 import java.io.FileNotFoundException;
-import snakegame.*;
  
 /**
  * This program demonstrates how to use JFrame and LayoutManager.
@@ -91,17 +89,14 @@ public class AM_LoginForm extends JFrame implements ActionListener {
     }
     
     public void actionPerformed(ActionEvent e) {
-//        String username = textUsername.getText();
-//        String password = fieldPassword.getText();
-    	
-    	String username = "abdul";
-        String password = "123";
+        String username = textUsername.getText();
+        String password = fieldPassword.getText();
         
         if (playerList.matchPlayer(username, password)) {
-        	
-        	remove(panelLogin);
-        	
-        	add(new AM_GameBoard());
+            
+            remove(panelLogin);
+            
+            add(new AM_GameBoard(username));
             setResizable(false);
             
             pack();
@@ -109,7 +104,7 @@ public class AM_LoginForm extends JFrame implements ActionListener {
             setTitle("My Snake Game (C)");
             setLocationRelativeTo(null);
             setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        	
+            
         } else {
             JOptionPane.showMessageDialog(this, "wrong username or password");
         }

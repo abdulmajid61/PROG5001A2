@@ -1,4 +1,4 @@
-package snakegame;
+
 /**
  * Class Prey represents any prey object.
  *
@@ -10,13 +10,17 @@ public class AM_Prey {
     int size;
     int x_cordinate;
     int y_cordinate;
+
+    public AM_Prey()
+    {
+        this.size = 10;
+    }
+
     /**
      * Constructor for objects of class Prey
      */
     
-    public AM_Prey()
-    {
-    }
+
     
     public int getSize(){
         //getter function for size

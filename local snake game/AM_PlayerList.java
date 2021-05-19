@@ -1,4 +1,4 @@
-package snakegame;
+
 /**
  * Write a description of class Player here.
  *
