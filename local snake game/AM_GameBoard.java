@@ -1,24 +1,22 @@
+import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableModel;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
+import java.io.*;
 import java.util.Random;
+import java.util.Vector;
+import java.util.stream.Collectors;
 
-import javax.swing.*;
+public class AM_GameBoard extends JPanel implements ActionListener {
 
-public class AM_GameBoard extends JPanel implements ActionListener, KeyListener {
-    final int UP_CODE = 38;
-    final int DOWN_CODE = 40;
-    final int LEFT_CODE = 39;
-    final int RIGHT_CODE = 37;
+    public static final String GAME_DESCRIPTION = "<html> PROG5001: 2021 <br /><br /> Movements: Arrow Keys (→ ↑ ← ↓) <br /> Pause: SPACE </html>";
+    public static final String SCORE = "Score: %d (%s)";
+    public static final int SCORE_PER_APPLE = 5;
 
     private String queuedDirection = null;
-
-    private int xStart = 10;
-    private int yStart = 10;
-    private int boardWidth = 480;
-    private int boardHeight = 400;
+    private Rectangle board;
 
     private Random rand;
 
@@ -29,10 +27,11 @@ public class AM_GameBoard extends JPanel implements ActionListener, KeyListener 
     private Image apple;
     private Image snakehead;
 
-    private JButton topPlayerScore;
-    private JButton currentPlayerScore;
-    private JButton yourScore;
-    private JButton quit;
+    private JLabel gameDescription;
+    private JLabel score;
+    private JTable highScores;
+    private JLabel centerText;
+    private JButton playAgain;
 
     private AM_Prey prey;
     private AM_Snake snake;
@@ -41,41 +40,87 @@ public class AM_GameBoard extends JPanel implements ActionListener, KeyListener 
     private int tick = 0;
     private int maxTicks = Integer.MAX_VALUE - 10;
 
-    String currentPlayer;
-    Long currentScore = 0L;
-    boolean gameOver;
+    private String currentPlayer;
+    private Long currentScore = 0L;
+    private boolean gameOver;
+    private boolean gamePaused;
+    private boolean highScoresSynced;
 
-    int ticksToMoveSnake = 10;
+    int ticksToMoveSnake;
 
     public AM_GameBoard(String player) {
         rand = new Random();
         this.currentPlayer = player;
-        this.gameOver = false;
         initGameBoard();
     }
 
+    private void setControls() {
+        getInputMap().put(KeyStroke.getKeyStroke("SPACE"), "pause");
+        getInputMap().put(KeyStroke.getKeyStroke("UP"), "up");
+        getInputMap().put(KeyStroke.getKeyStroke("DOWN"), "down");
+        getInputMap().put(KeyStroke.getKeyStroke("LEFT"), "right");
+        getInputMap().put(KeyStroke.getKeyStroke("RIGHT"), "left");
+        getActionMap().put("pause", new AbstractAction()  {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                togglePause();
+            }
+        });
+        getActionMap().put("up", new AbstractAction()  {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                queueDirection(AM_Snake.UP);
+            }
+        });
+        getActionMap().put("down", new AbstractAction()  {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                queueDirection(AM_Snake.DOWN);
+            }
+        });
+        getActionMap().put("left", new AbstractAction()  {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                queueDirection(AM_Snake.LEFT);
+            }
+        });
+        getActionMap().put("right", new AbstractAction()  {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                queueDirection(AM_Snake.RIGHT);
+            }
+        });
+    }
+
     private void initGameBoard(){
+
+        setControls();
+
         setPreferredSize(new Dimension(SCREEN_WIDTH, SCREEN_HEIGHT));
-        addKeyListener(this);
-        grabFocus();
         setFocusable(true);
+        loadAssets();
+        setLayout(null);
 
-        loadIcons();
-
-        prey = new AM_Prey();
-        randomizePrey();
-
-        // generate random co ordinates for snake facing upward
-        // subtract 15 as buffer so snake is always show on the screen at the start
-        int snakeX = randomNumber(xStart, boardWidth - 15);
-        int snakeY = randomNumber(yStart, boardHeight - 15);
-        snake = new AM_Snake(snakeX, snakeY);
+        setGame();
 
         timer = new Timer(50, this);
         timer.start();
+        EventQueue.invokeLater(this::grabFocus);
+        EventQueue.invokeLater(this::addUI);
     }
 
-    private void loadIcons() {
+    private void setGame() {
+        this.gameOver = false;
+        this.gamePaused = true;
+        this.currentScore = 0L;
+        this.ticksToMoveSnake = 10;
+        board = new Rectangle(10, 10, 480, 400);
+        prey = new AM_Prey();
+        randomizePrey();
+        snake = new AM_Snake((int) board.getCenterX(), (int) board.getCenterY() + 50);
+    }
+
+    private void loadAssets() {
 
         ImageIcon iisnakepart = new ImageIcon("resources/dot.png");
         snakepart = iisnakepart.getImage();
@@ -87,69 +132,79 @@ public class AM_GameBoard extends JPanel implements ActionListener, KeyListener 
         snakehead = iisnakehead.getImage();
     }
 
-    public void drawGameBoard(){
-        //this method will draw gameboard as canvas and initialize
-        //it with proper values
-    }
-
-    public int getValue(int x,int y){
-        //it will get the value at particular cell x and y cordinate
-        return 0;
-    }
-
-    public int setValue(int x,int y,int value){
-        //it will set the value at particular cell x and y cordinate
-        return 0;
-    }
 
     @Override
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
 
-        g.setColor(Color.black);
-        g.fillRect(xStart, yStart, boardWidth, boardHeight);
-        removeAll();
+        drawBoard((Graphics2D) g);
 
-        this.topPlayerScore = new JButton("TO PLAYER'S SCORE");
-        this.topPlayerScore.setBounds(500, 10, 290, 50);
-        this.topPlayerScore.setLayout(null);
-
-        this.add(this.topPlayerScore);
-
-        this.currentPlayerScore = new JButton("CURRENT PLAYER SCORE");
-        this.currentPlayerScore.setBounds(500, 60, 290, 50);
-        this.currentPlayerScore.setLayout(null);
-
-        this.add(this.currentPlayerScore);
-
-
-        this.yourScore = new JButton(String.format("<html>PROG5001: 2021 <br /> %s: %d</html>", currentPlayer, currentScore));
-        this.yourScore.setBounds(500, 300, 290, 50);
-        this.yourScore.setLayout(null);
-
-        this.add(this.yourScore);
-
-
-        this.quit = new JButton("QUIT");
-        this.quit.setBounds(500, 360, 290, 50);
-        this.quit.setLayout(null);
-
-        this.add(this.quit);
-
+        g.setColor(Color.white);
         doDrawing(g);
+    }
+
+    public void addUI() {
+        this.gameDescription = new JLabel(GAME_DESCRIPTION);
+        this.gameDescription.setBounds(500, 250, 290, 100);
+        this.add(this.gameDescription);
+
+        this.score = new JLabel(String.format(SCORE, currentScore, currentPlayer));
+        this.score.setBounds(500, 5, 290, 50);
+        this.add(this.score);
+
+        TableModel scoreData = loadHighScoreData();
+        this.highScores = new JTable(scoreData);
+        JScrollPane highScoreView = new JScrollPane(new JTable(scoreData));
+        highScoreView.setBounds(500, 50, 290, 200);
+        this.add(highScoreView);
+        this.highScoresSynced = true;
+
+
+        JButton quit = new JButton("QUIT");
+        quit.setBounds(610, 360, 100, 50);
+        quit.addActionListener((e) -> {
+            System.exit(0);
+        });
+        this.add(quit);
+
+        this.playAgain = new JButton("PLAY AGAIN");
+        this.playAgain.setEnabled(false);
+        this.playAgain.setBounds(500, 360, 100, 50);
+        this.playAgain.addActionListener((e) -> {
+            setGame();
+            resetUI();
+        });
+        this.add(this.playAgain);
+
+        this.centerText = new JLabel("PAUSED");
+        centerText.setForeground(Color.white);
+        this.centerText.setBounds((int) board.getCenterX() - 50, (int) board.getCenterY() - 50, 100, 25);
+        this.add(this.centerText);
+    }
+
+    private void resetUI() {
+        this.playAgain.setEnabled(false);
+        this.centerText.setText("PAUSED");
+        this.score.setForeground(Color.black);
+        score.setText(String.format(SCORE, currentScore, currentPlayer));
+        grabFocus();
+    }
+
+
+    private void drawBoard(Graphics2D g) {
+        g.setColor(Color.black);
+        g.fillRect(board.x, board.y, board.width, board.height);
+        g.setColor(Color.red);
+        Stroke oldStroke = g.getStroke();
+        g.setStroke(new BasicStroke(3));
+        g.drawRect(board.x, board.y, board.width, board.height);
+        g.setStroke(oldStroke);
+        g.setColor(Color.black);
     }
 
     private void doDrawing(Graphics g) {
         drawPrey(g);
         drawSnake(g);
-
-        if (gameOver) {
-            yourScore.setForeground(Color.red);
-            JLabel gameOverLabel = new JLabel("Game Over");
-            gameOverLabel.setBounds(500, 100, 200, 50);
-            gameOverLabel.setForeground(Color.red);
-            this.add(gameOverLabel);
-        }
     }
 
     private boolean drawPrey(Graphics g) {
@@ -157,33 +212,9 @@ public class AM_GameBoard extends JPanel implements ActionListener, KeyListener 
     }
 
     private void drawSnake(Graphics g) {
-        if (!gameOver && (tick % ticksToMoveSnake == 0)) {
-            //move snake
-            snake.move(queuedDirection, xStart, yStart, boardWidth, boardHeight);
-
-            //reset input direction
-            queuedDirection = null;
-        }
-
-        //check if snake ate apple
-        if (snake.didSnakeEatPrey(prey)) {
-            //reset prey position
-            randomizePrey();
-
-            //grow snake tail
-            snake.grow();
-
-            //inccrease score
-            currentScore += 5;
-            yourScore.setText(String.format("<html>PROG5001: 2021 <br /> %s: %d</html>", currentPlayer, currentScore));
-
-            //increase speed after every 2 prey
-            if (currentScore % 10 == 0) {
-                ticksToMoveSnake = Math.max(ticksToMoveSnake - 1, 1);
-            }
-        } else if (snake.didSnakeEatItself()) {
-            //game over if snake head touches its body
-            gameOver = true;
+        if (gameIsRunning() && shouldUpdateFrame()) {
+            moveSnake();
+            detectCollision(g);
         }
 
         //draw head
@@ -195,63 +226,189 @@ public class AM_GameBoard extends JPanel implements ActionListener, KeyListener 
         }
     }
 
+    private boolean shouldUpdateFrame() {
+        return tick % ticksToMoveSnake == 0;
+    }
+
+    private TableModel loadHighScoreData() {
+        Vector<String> columns = highScoreColumns();
+        return new DefaultTableModel(deserializeHighScores(), columns) {
+
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
+    }
+
+    private Vector<String> highScoreColumns() {
+        Vector<String>  columns = new Vector<>();
+        columns.add("Name");
+        columns.add("Score");
+        return columns;
+    }
+
+    private void saveTopTenScores() {
+        if (currentScore <= 0) {
+            return;
+        }
+
+        Vector<String> userScore = userScoreVector();
+
+        Vector<Vector> data = ((DefaultTableModel) this.highScores.getModel()).getDataVector();
+        data.add(userScore);
+
+        int scoreIndex = 1;
+
+        //Java Stream - https://www.tutorialspoint.com/java8/java8_streams.htm
+        Vector<Vector> topTenScores = data.stream()
+            .distinct() // remove duplicates
+            .sorted((row1, row2) -> Integer.parseInt(row2.get(scoreIndex).toString()) - Integer.parseInt(row1.get(scoreIndex).toString())) //sorting by score in descending order
+            .limit(10)
+            .collect(Collectors.toCollection(Vector::new));
+
+        ((DefaultTableModel) this.highScores.getModel()).setDataVector(topTenScores, highScoreColumns());
+
+        serializeHighScores(topTenScores);
+    }
+
+    private Vector<String> userScoreVector() {
+        Vector<String> userScore = new Vector<>();
+        userScore.add(currentPlayer);
+        userScore.add(String.valueOf(currentScore));
+       return userScore;
+    }
+
+
+    // Java Serialization - https://www.tutorialspoint.com/java/java_serialization.htm
+    private void serializeHighScores(Vector<Vector> data) {
+        ObjectOutputStream out = null;
+        try {
+            out = new ObjectOutputStream(new BufferedOutputStream(new FileOutputStream("highScores.ser")));
+            out.writeObject(data);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        finally {
+            if (out != null) {
+                try {
+                    out.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
+    private Vector<Vector> deserializeHighScores() {
+        ObjectInputStream in = null;
+        try {
+            in = new ObjectInputStream(new BufferedInputStream(new FileInputStream("highScores.ser")));
+            return (Vector<Vector>) in.readObject();
+        } catch (IOException | ClassNotFoundException e) {
+            //No saved high scores/ ignore error display empty high scores
+        } finally {
+            if (in != null) {
+                try {
+                    in.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+        return new Vector<>();
+    }
+
+    private boolean gameIsRunning() {
+        return !gameOver && !gamePaused;
+    }
+
+    private void moveSnake() {
+        //move snake
+        snake.move(queuedDirection);
+
+        //reset input direction
+        queuedDirection = null;
+    }
+
+    private void detectCollision(Graphics g) {
+        if (!board.contains(snake.x_cordinate, snake.y_cordinate)) {
+            gameOver(g);
+        } else if (snake.didSnakeEatPrey(prey)) {
+            //reset prey position
+            randomizePrey();
+
+            //grow snake tail
+            snake.grow();
+
+            increaseScore(SCORE_PER_APPLE);
+
+            int X = 2;
+            //increase speed after every X prey
+            if (currentScore % (SCORE_PER_APPLE * X) == 0) {
+                ticksToMoveSnake = Math.max(ticksToMoveSnake - 1, 1);
+            }
+        } else if (snake.didSnakeEatItself()) {
+            //game over if snake head touches its body
+            gameOver(g);
+        }
+    }
+
+    private void gameOver(Graphics g) {
+        gameOver = true;
+        score.setForeground(Color.red);
+        centerText.setText("GameOver");
+        saveTopTenScores();
+        this.playAgain.setEnabled(true);
+    }
+
+    private void increaseScore(int scoreToIncrease) {
+        currentScore += scoreToIncrease;
+        score.setText(String.format(SCORE, currentScore, currentPlayer));
+    }
+
     private void randomizePrey() {
-        int randomX = randomNumber(xStart/10, boardWidth/10);
-        int randomY = randomNumber(yStart/10, boardHeight/10);
-        prey.setXCordinate(randomX * 10);
-        prey.setYCordinate(randomY * 10);
+        int randomX = randomNumber(board.x+10, board.width-20);
+        int randomY = randomNumber(board.y+10, board.height-20);
+        prey.setXCordinate(randomX);
+        prey.setYCordinate(randomY);
     }
 
     private int randomNumber(int min, int max) {
         return rand.nextInt((max - min) + 1) + min;
     }
 
+    //events
     @Override
     public void actionPerformed(ActionEvent e) {
         if (e.getSource() == timer) {
-            tick++;
-            if (tick > maxTicks) {
-                tick = 0;
-            }
+            tick();
             repaint();
         }
     }
 
-    @Override
-    public void keyTyped(KeyEvent e) {
-
-    }
-
-    @Override
-    public void keyPressed(KeyEvent e) {
-        switch (e.getKeyCode()) {
-            case UP_CODE:
-                if (queuedDirection == null) {
-                    queuedDirection = (AM_Snake.UP);
-                }
-                break;
-            case DOWN_CODE:
-                if (queuedDirection == null) {
-                    queuedDirection = (AM_Snake.DOWN);
-                }
-                break;
-            case RIGHT_CODE:
-                if (queuedDirection == null) {
-                    queuedDirection = (AM_Snake.RIGHT);
-                }
-                break;
-            case LEFT_CODE:
-                if (queuedDirection == null) {
-                    queuedDirection = (AM_Snake.LEFT);
-                }
-                break;
-            default:
-                break;
+    private void tick() {
+        tick++;
+        if (tick > maxTicks) {
+            tick = 0;
         }
     }
 
-    @Override
-    public void keyReleased(KeyEvent e) {
+    private void togglePause() {
+        gamePaused = !gamePaused;
 
+        if (gamePaused) {
+            centerText.setText("PAUSED");
+        } else {
+            centerText.setText("");
+        }
+
+    }
+
+    private void queueDirection(String dir) {
+        if (queuedDirection == null) {
+            queuedDirection = (dir);
+        }
     }
 }

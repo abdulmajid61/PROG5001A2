@@ -5,9 +5,10 @@
  * @author Abdul Majid
  * @version 24-04-2021
  */
+
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.Collections;
+import java.util.Iterator;
 
 public class AM_PlayerList
 {

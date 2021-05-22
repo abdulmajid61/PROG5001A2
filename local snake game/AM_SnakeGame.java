@@ -1,5 +1,5 @@
-import java.awt.EventQueue;
-import javax.swing.JFrame;
+import javax.swing.*;
+import java.awt.*;
 
 public class AM_SnakeGame extends JFrame {
 

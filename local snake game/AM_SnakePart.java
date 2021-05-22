@@ -33,7 +33,7 @@ public class AM_SnakePart {
         this.y_coordinate = y_coordinate;
     }
 
-    public void move(int speed, int minX, int minY, int maxX, int maxY) {
+    public void move(int speed) {
         switch (direction) {
             case AM_Snake.UP:
                 y_coordinate -= speed;
@@ -47,16 +47,6 @@ public class AM_SnakePart {
             case AM_Snake.RIGHT:
                 x_coordinate -= speed;
                 break;
-        }
-
-        if (y_coordinate < minY) {
-            y_coordinate = maxY;
-        } else if (y_coordinate > maxY) {
-            y_coordinate = minY;
-        } else if (x_coordinate < minX) {
-            x_coordinate = maxX;
-        } else if (x_coordinate > maxX) {
-            x_coordinate = minX;
         }
     }
 }

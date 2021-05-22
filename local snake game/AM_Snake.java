@@ -37,16 +37,16 @@ public class AM_Snake
         initSnakeBody(length);
     }
 
-    public void move(String direction, int minX, int minY, int maxX, int maxY) {
+    public void move(String direction) {
         if (direction != null) {
             changeDirection(direction);
         }
 
-        moveHead(minX, minY, maxX, maxY);
+        moveHead();
 
         String leaderDirection = this.direction;
         for (int i = 0; i < body.size(); i++) {
-            body.get(i).move(pixelsToMove, minX, minY, maxX, maxY);
+            body.get(i).move(pixelsToMove);
             String temp = body.get(i).getDirection();
             body.get(i).setDirection(leaderDirection);
             leaderDirection = temp;
@@ -74,7 +74,7 @@ public class AM_Snake
         length++;
     }
 
-    private void moveHead(int minX, int minY, int maxX, int maxY) {
+    private void moveHead() {
         switch (this.direction) {
             case UP:
                 y_cordinate -= pixelsToMove;
@@ -88,16 +88,6 @@ public class AM_Snake
             case RIGHT:
                 x_cordinate -= pixelsToMove;
                 break;
-        }
-
-        if (y_cordinate < minY) {
-            y_cordinate = maxY;
-        } else if (y_cordinate > maxY) {
-            y_cordinate = minY;
-        } else if (x_cordinate < minX) {
-            x_cordinate = maxX;
-        } else if (x_cordinate > maxX) {
-            x_cordinate = minX;
         }
     }
 
